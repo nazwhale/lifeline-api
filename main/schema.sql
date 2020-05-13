@@ -8,7 +8,7 @@ CREATE TABLE users (
 CREATE TABLE experiences (
   pid SERIAL PRIMARY KEY,
   title VARCHAR(255),
-  start_date TIMESTAMP
-  end_date TIMESTAMP
-  user_id INT REFERENCES users(user_id),
+  start_date TIMESTAMP,
+  end_date TIMESTAMP,
+  user_id INT REFERENCES users(user_id)
 );
