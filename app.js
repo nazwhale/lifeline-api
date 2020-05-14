@@ -10,10 +10,6 @@ var usersRouter = require("./routes/users");
 
 var app = express();
 
-// view engine setup
-app.set("views", path.join(__dirname, "views"));
-app.set("view engine", "jade");
-
 app.use(cors());
 app.use(logger("dev"));
 app.use(express.json());
@@ -25,7 +21,9 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/api", indexRouter);
 app.use("/api/user", usersRouter);
 
-// catch 404 and forward to error handler
+// no idea why this gets the calc favicon, but it stops the 404s
+app.get("/favicon.ico", (req, res) => res.status(204));
+
 app.use(function(req, res, next) {
   next(createError(404));
 });
@@ -38,7 +36,10 @@ app.use(function(err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500);
-  res.render("error");
+  res.json({
+    message: err.message,
+    error: err
+  });
 });
 
 module.exports = app;
