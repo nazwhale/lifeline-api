@@ -17,12 +17,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
-// todo: delete old routes
 app.use("/api", indexRouter);
-app.use("/api/user", usersRouter);
-
-// no idea why this gets the calc favicon, but it stops the 404s
-app.get("/favicon.ico", (req, res) => res.status(204));
+app.use("/api/users", usersRouter);
 
 app.use(function(req, res, next) {
   next(createError(404));
@@ -41,5 +37,8 @@ app.use(function(err, req, res, next) {
     error: err
   });
 });
+
+// no idea why this gets the calc favicon, but it stops the 404s
+app.get("/favicon.ico", (req, res) => res.status(204));
 
 module.exports = app;

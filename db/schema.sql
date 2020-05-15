@@ -2,8 +2,6 @@
 other fields?
   rename user_id to id
   soft deleted_at field?
-  external_login_id column
-  login type column
   timestamp for everything? - enforce we're storing everything in UTC on the backend
   replace NOW() with timezone('utc', NOW())
  */
@@ -11,7 +9,9 @@ CREATE TABLE users (
   user_id SERIAL PRIMARY KEY,
   email VARCHAR(255) UNIQUE,
   date_created DATE,
-  last_login DATE
+  last_login DATE,
+  login_type VARCHAR(255),
+  external_login_id VARCHAR(255)
 );
 
 /*
