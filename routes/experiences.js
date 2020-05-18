@@ -36,7 +36,7 @@ router.get("/", verify, dao.readExperienceById, (req, res, next) => {
   } else {
     res.json({
       code: "read_experience",
-      data: experiences
+      experiences: experiences
     });
   }
 });
@@ -52,8 +52,8 @@ router.get("/user", verify, dao.readExperienceByUserId, (req, res, next) => {
     });
   } else {
     res.json({
-      code: "read_experience",
-      data: experiences
+      code: "read_experiences_for_user",
+      experiences: experiences
     });
   }
 });

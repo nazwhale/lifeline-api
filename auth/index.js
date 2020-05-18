@@ -1,6 +1,7 @@
 const { OAuth2Client } = require("google-auth-library");
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+// TODO: fix hanging errors for expired tokens
 async function verify(req, res, next) {
   const token = req.headers["authorization"];
 
