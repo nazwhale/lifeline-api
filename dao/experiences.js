@@ -5,10 +5,8 @@ function createExperience(req, res, next) {
   const newExperienceData = [title, start_date, end_date, user_id];
   const { db_data } = req;
 
-  console.log("✨", newExperienceData);
-
   if (db_data != null && db_data.error != null) {
-    console.log("already errored:", db_data.error.code);
+    // if we've errorred, don't create an experience
     next();
   } else {
     pool.query(
@@ -17,8 +15,6 @@ function createExperience(req, res, next) {
               RETURNING *`,
       newExperienceData,
       (q_err, q_res) => {
-        console.log(q_res);
-        console.log("🧠", q_err);
         if (q_err) {
           req.db_data = {
             experiences: null,
@@ -46,7 +42,21 @@ function readExperienceById(req, res, next) {
     [id],
     (q_err, q_res) => {
       req.db_data = { experiences: q_res.rows };
-      console.log("📁", req.db_data);
+      next();
+    }
+  );
+}
+
+function readExperienceByUserId(req, res, next) {
+  const { user_id } = req.query;
+
+  pool.query(
+    `SELECT * FROM experiences
+              WHERE user_id=$1
+              ORDER BY start_date`,
+    [user_id],
+    (q_err, q_res) => {
+      req.db_data = { experiences: q_res.rows };
       next();
     }
   );
@@ -86,5 +96,6 @@ function checkExperienceDateClash(req, res, next) {
 module.exports = {
   createExperience,
   readExperienceById,
+  readExperienceByUserId,
   checkExperienceDateClash
 };

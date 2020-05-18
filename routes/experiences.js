@@ -26,14 +26,29 @@ router.post(
 
 router.get("/", verify, dao.readExperienceById, (req, res, next) => {
   const { experiences } = req.db_data;
-  console.log("👋", experiences);
-  console.log("➡️", req.body.data);
 
   if (experiences.length === 0) {
     console.log("about to 404...");
     res.status(404).json({
       code: "not_found_experience",
       name: `Experience not found. ID: ${req.query.id}`
+    });
+  } else {
+    res.json({
+      code: "read_experience",
+      data: experiences
+    });
+  }
+});
+
+router.get("/user", verify, dao.readExperienceByUserId, (req, res, next) => {
+  const { experiences } = req.db_data;
+
+  if (experiences.length === 0) {
+    console.log("about to 404...");
+    res.status(404).json({
+      code: "not_found_experiences_for_user",
+      name: `No experiences for user ID: ${req.query.user_id}`
     });
   } else {
     res.json({
