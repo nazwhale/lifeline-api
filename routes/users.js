@@ -23,11 +23,13 @@ router.post("/login", verify, readUserByEmail, (req, res, next) => {
     pool.query(
       `INSERT INTO users(email, created_at, last_login_at, login_type, external_login_id)
                 VALUES($1, timezone('utc', NOW()), $2, $3, $4)
-                ON CONFLICT DO NOTHING`,
+                ON CONFLICT DO NOTHING
+                RETURNING id`,
       newUserData,
       (q_err, q_res) => {
         res.json({
           code: "create_user",
+          user_id: q_res.rows[0].id,
           email: email,
           last_login_at: lastLogin,
           login_type: login_type
@@ -43,11 +45,13 @@ router.post("/login", verify, readUserByEmail, (req, res, next) => {
               SET last_login_at = $2,
                   login_type = $3,
                   external_login_id = $4
-              WHERE email=$1`,
+              WHERE email=$1
+              RETURNING id`,
       values,
       (q_err, q_res) => {
         res.json({
           code: "update_user",
+          user_id: q_res.rows[0].id,
           email: email,
           last_login_at: lastLogin,
           login_type: login_type
@@ -59,11 +63,9 @@ router.post("/login", verify, readUserByEmail, (req, res, next) => {
 
 // Create new user
 router.post("/", (req, res, next) => {
-  console.log("🙏", req.body);
   const { profile } = req.body;
-
   const values = [profile.email, profile.lastLogin];
-  console.log("⚡️", values);
+
   pool.query(
     `INSERT INTO users(email, created_at, last_login_at)
               VALUES($1, timezone('utc', NOW()), $2)
@@ -78,10 +80,8 @@ router.post("/", (req, res, next) => {
 // Read existing user
 router.get("/", verify, readUserByEmail, (req, res, next) => {
   const { users } = req;
-  console.log("peeps", req.users);
 
   if (users.length === 0) {
-    console.log("about to 404...");
     res.status(404).json({
       code: "not_found_user",
       name: "User not found"
@@ -93,7 +93,6 @@ router.get("/", verify, readUserByEmail, (req, res, next) => {
 
 // Update existing user's last login
 router.put("/", (req, res, next) => {
-  console.log("🙏", req.body);
   const { lastLogin, email } = req.body;
   const values = [lastLogin, email];
 
