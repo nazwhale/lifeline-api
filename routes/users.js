@@ -3,13 +3,13 @@ var router = express.Router();
 var verify = require("../auth");
 var pool = require("../db");
 var getISOTimestamp = require("../utils/helpers");
-var getUserByEmail = require("../dao/users");
+var readUserByEmail = require("../dao/users");
 
 /*
   Users Table
 */
 
-router.post("/login", verify, getUserByEmail, (req, res, next) => {
+router.post("/login", verify, readUserByEmail, (req, res, next) => {
   const { email } = req.body.profile;
   const { login_type, external_login_id } = req.body.login_info;
   const { users } = req.db_data;
@@ -27,7 +27,7 @@ router.post("/login", verify, getUserByEmail, (req, res, next) => {
       newUserData,
       (q_err, q_res) => {
         res.json({
-          code: "created_new_user",
+          code: "create_user",
           email: email,
           last_login_at: lastLogin,
           login_type: login_type
@@ -47,7 +47,7 @@ router.post("/login", verify, getUserByEmail, (req, res, next) => {
       values,
       (q_err, q_res) => {
         res.json({
-          code: "update_existing_user",
+          code: "update_user",
           email: email,
           last_login_at: lastLogin,
           login_type: login_type
@@ -76,14 +76,14 @@ router.post("/", (req, res, next) => {
 });
 
 // Read existing user
-router.get("/", verify, getUserByEmail, (req, res, next) => {
+router.get("/", verify, readUserByEmail, (req, res, next) => {
   const { users } = req;
   console.log("peeps", req.users);
 
   if (users.length === 0) {
     console.log("about to 404...");
     res.status(404).json({
-      code: "user_not_found",
+      code: "not_found_user",
       name: "User not found"
     });
   } else {

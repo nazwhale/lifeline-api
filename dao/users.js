@@ -1,6 +1,6 @@
 var pool = require("../db");
 
-function getUserByEmail(req, res, next) {
+function readUserByEmail(req, res, next) {
   const { email } = req.body.profile;
 
   pool.query(
@@ -14,4 +14,4 @@ function getUserByEmail(req, res, next) {
   );
 }
 
-module.exports = getUserByEmail;
+module.exports = readUserByEmail;
