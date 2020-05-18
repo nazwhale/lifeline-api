@@ -8,7 +8,7 @@ function getUserByEmail(req, res, next) {
               WHERE email=$1`,
     [email],
     (q_err, q_res) => {
-      req.users = q_res.rows;
+      req.db_data = { users: q_res.rows };
       next();
     }
   );

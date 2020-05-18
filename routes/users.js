@@ -12,7 +12,7 @@ var getUserByEmail = require("../dao/users");
 router.post("/login", verify, getUserByEmail, (req, res, next) => {
   const { email } = req.body.profile;
   const { login_type, external_login_id } = req.body.login_info;
-  const { users } = req;
+  const { users } = req.db_data;
   const lastLogin = getISOTimestamp();
 
   // How to do an if/else in little seperate express functions?
@@ -21,8 +21,8 @@ router.post("/login", verify, getUserByEmail, (req, res, next) => {
     const newUserData = [email, lastLogin, login_type, external_login_id];
 
     pool.query(
-      `INSERT INTO users(email, date_created, last_login, login_type, external_login_id)
-                VALUES($1, NOW(), $2, $3, $4)
+      `INSERT INTO users(email, created_at, last_login_at, login_type, external_login_id)
+                VALUES($1, timezone('utc', NOW()), $2, $3, $4)
                 ON CONFLICT DO NOTHING`,
       newUserData,
       (q_err, q_res) => {
@@ -40,7 +40,7 @@ router.post("/login", verify, getUserByEmail, (req, res, next) => {
 
     pool.query(
       `UPDATE users
-              SET last_login = $2,
+              SET last_login_at = $2,
                   login_type = $3,
                   external_login_id = $4
               WHERE email=$1`,
@@ -65,8 +65,8 @@ router.post("/", (req, res, next) => {
   const values = [profile.email, profile.lastLogin];
   console.log("⚡️", values);
   pool.query(
-    `INSERT INTO users(email, date_created, last_login)
-              VALUES($1, NOW(), $2)
+    `INSERT INTO users(email, created_at, last_login_at)
+              VALUES($1, timezone('utc', NOW()), $2)
               ON CONFLICT DO NOTHING`,
     values,
     (q_err, q_res) => {
@@ -99,7 +99,7 @@ router.put("/", (req, res, next) => {
 
   pool.query(
     `UPDATE users
-              SET last_login = $1
+              SET last_login_at = $1
               WHERE email=$2`,
     values,
     (q_err, q_res) => {
