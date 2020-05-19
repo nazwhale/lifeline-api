@@ -4,14 +4,20 @@ const { Experience } = require("../models/Experience");
 // Actions Handled By Resource Controller
 
 class ExperienceController {
-  static show(req, res, next) {
-    const id = req.params.id;
+  static async show(req, res, next) {
+    const id = req.query.id;
+    let instance;
     try {
-      const instance = Experience.findById(id);
-      return instance.toJSON();
+      instance = await Experience.findById(req.db, id);
     } catch (e) {
-      return next(e);
+      next(e);
     }
+
+    if (instance == null) {
+      return res.status(404).json({ message: `Experience not found: ${id}` });
+    }
+
+    return res.json(instance.toJSON());
   }
 
   static async store(req, res, next) {

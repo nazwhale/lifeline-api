@@ -19,9 +19,21 @@ class Experience {
     };
   }
 
-  async save(db) {
-    console.log("about to model.save()");
+  /* Validation */
 
+  async validate() {
+    await mustNotClash();
+  }
+
+  async mustNotClash() {
+    if (await makeAsync(pool.query("...."))) {
+      throw new Error("Clashes! Oops!");
+    }
+  }
+
+  /* Actions */
+
+  async save(db) {
     try {
       return new Promise((resolve, reject) => {
         const data = [this.title, this.start_date, this.end_date, this.user_id];
@@ -42,71 +54,23 @@ class Experience {
     }
   }
 
-  async mustNotClash() {
-    if (await makeAsync(pool.query("...."))) {
-      throw new Error("Clashes! Oops!");
-    }
-  }
-
-  async validate() {
-    await mustNotClash();
-    await mustWearBlueHats();
-    await mustNotOwnDogs();
-  }
-
-  static findById(id) {
-    // const ex = db.find(id)
-    return new Experience({});
-  }
-}
-/* end file*/
-
-function createExperience(req, res, next) {
-  const { title, start_date, end_date, user_id } = req.body;
-  const newExperienceData = [title, start_date, end_date, user_id];
-  const { db_data } = req;
-
-  if (db_data != null && db_data.error != null) {
-    // if we've errorred, don't create an experience
-    next();
-  } else {
-    pool.query(
-      `INSERT INTO experiences(title, start_date, end_date, user_id, created_at)
-              VALUES($1, $2, $3, $4, timezone('utc', NOW()))
-              RETURNING *`,
-      newExperienceData,
-      (q_err, q_res) => {
-        if (q_err) {
-          req.db_data = {
-            experiences: null,
-            error: {
-              code: "error_creating_experience",
-              data: q_err
-            }
-          };
-        } else {
-          req.db_data = { experiences: q_res.rows, error: null };
+  static async findById(db, id) {
+    return new Promise((resolve, reject) => {
+      db.query(
+        `SELECT * FROM experiences
+                WHERE id=$1`,
+        [id],
+        (q_err, q_res) => {
+          if (q_err) return reject(q_err);
+          if (q_res.rows.length === 0) return resolve(null);
+          const ex = new Experience(q_res.rows[0]);
+          resolve(ex);
         }
-        next();
-      }
-    );
+      );
+    });
   }
 }
-
-function readExperienceById(req, res, next) {
-  const { id } = req.query;
-  console.log("✨", id);
-
-  pool.query(
-    `SELECT * FROM experiences
-              WHERE id=$1`,
-    [id],
-    (q_err, q_res) => {
-      req.db_data = { experiences: q_res.rows };
-      next();
-    }
-  );
-}
+/* end of class */
 
 function readExperienceByUserId(req, res, next) {
   const { user_id } = req.query;
@@ -156,7 +120,6 @@ function checkExperienceDateClash(req, res, next) {
 
 module.exports = {
   Experience,
-  createExperience,
   readExperienceById,
   readExperienceByUserId,
   checkExperienceDateClash

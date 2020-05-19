@@ -10,6 +10,7 @@ const dao = require("../models/Experience");
 // Experience.findById(1); // => new Experience()
 
 router.post("/", ExperienceController.store);
+router.get("/", ExperienceController.show);
 
 // router.post(
 //   "/hi",
@@ -29,23 +30,6 @@ router.post("/", ExperienceController.store);
 //     // }
 //   }
 // );
-
-router.get("/", verify, dao.readExperienceById, (req, res, next) => {
-  const { experiences } = req.db_data;
-
-  if (experiences.length === 0) {
-    console.log("about to 404...");
-    res.status(404).json({
-      code: "not_found_experience",
-      name: `Experience not found. ID: ${req.query.id}`
-    });
-  } else {
-    res.json({
-      code: "read_experience",
-      experiences: experiences
-    });
-  }
-});
 
 router.get("/user", verify, dao.readExperienceByUserId, (req, res, next) => {
   const { experiences } = req.db_data;
