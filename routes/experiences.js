@@ -1,28 +1,34 @@
-var express = require("express");
-var router = express.Router();
-var verify = require("../auth");
+const express = require("express");
+const router = express.Router();
+const verify = require("../auth");
+const ExperienceController = require("../controllers/Experience");
 
-var dao = require("../dao/experiences");
+const dao = require("../models/Experience");
 
-router.post(
-  "/",
-  verify,
-  dao.checkExperienceDateClash,
-  dao.createExperience,
-  (req, res, next) => {
-    const { experiences, error } = req.db_data;
+// const { promisify } = require("utils");
 
-    if (error != null) {
-      res.json(error);
-    } else {
-      const newExperience = experiences[0];
-      res.json({
-        code: "create_experience",
-        experience: newExperience
-      });
-    }
-  }
-);
+// Experience.findById(1); // => new Experience()
+
+router.post("/", ExperienceController.store);
+
+// router.post(
+//   "/hi",
+//   // dao.checkExperienceDateClash,
+//   //  dao.createExperience,
+//   (req, res, next) => {
+//     console.log("POST /experience");
+//     //const { experiences, error } = req.db_data;
+//     // if (error != null) {
+//     //   res.json(error);
+//     // } else {
+//     //   const newExperience = experiences[0];
+//     //   res.json({
+//     //     code: "create_experience",
+//     //     experience: newExperience
+//     //   });
+//     // }
+//   }
+// );
 
 router.get("/", verify, dao.readExperienceById, (req, res, next) => {
   const { experiences } = req.db_data;
@@ -59,3 +65,37 @@ router.get("/user", verify, dao.readExperienceByUserId, (req, res, next) => {
 });
 
 module.exports = router;
+
+// ===========================================
+// handler
+
+// const { json } = require("micro");
+
+// const rsmq = require("../queue/rsmq");
+
+// const { async } = require("./utils");
+
+// module.exports = async (req, res) => {
+//   const { key } = req.params;
+//   const value = await json(req);
+
+//   // Hack: Extract the redis instance out of the rsmq
+//   // instance we've already set up for the worker.
+//   const instance = await rsmq.instance();
+//   const { redis } = instance.rsmq;
+
+//   const set = async(redis, "set");
+//   await set(key, JSON.stringify(value));
+
+//   return { key };
+// };
+
+// // ==========
+// // utils
+
+// const { promisify } = require("util");
+
+// module.exports.async = (client, method) =>
+//   promisify(client[method]).bind(client);
+
+//   // client.set

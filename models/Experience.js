@@ -1,4 +1,65 @@
-var pool = require("../db");
+const pool = require("../db");
+
+/* models/Experience.js */
+
+class Experience {
+  constructor({ title, start_date, end_date, user_id }) {
+    this.title = title;
+    this.start_date = start_date;
+    this.end_date = end_date;
+    this.user_id = user_id;
+  }
+
+  toJSON() {
+    return {
+      title: this.title,
+      start_date: this.start_date,
+      end_date: this.end_date,
+      user_id: this.user_id
+    };
+  }
+
+  async save(db) {
+    console.log("about to model.save()");
+
+    try {
+      return new Promise((resolve, reject) => {
+        const data = [this.title, this.start_date, this.end_date, this.user_id];
+
+        db.query(
+          `INSERT INTO experiences(title, start_date, end_date, user_id, created_at)
+                VALUES($1, $2, $3, $4, timezone('utc', NOW()))
+                RETURNING *`,
+          data,
+          (q_err, q_res) => {
+            if (q_err) return reject(q_err);
+            resolve(q_res.rows);
+          }
+        );
+      });
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  async mustNotClash() {
+    if (await makeAsync(pool.query("...."))) {
+      throw new Error("Clashes! Oops!");
+    }
+  }
+
+  async validate() {
+    await mustNotClash();
+    await mustWearBlueHats();
+    await mustNotOwnDogs();
+  }
+
+  static findById(id) {
+    // const ex = db.find(id)
+    return new Experience({});
+  }
+}
+/* end file*/
 
 function createExperience(req, res, next) {
   const { title, start_date, end_date, user_id } = req.body;
@@ -94,6 +155,7 @@ function checkExperienceDateClash(req, res, next) {
 }
 
 module.exports = {
+  Experience,
   createExperience,
   readExperienceById,
   readExperienceByUserId,

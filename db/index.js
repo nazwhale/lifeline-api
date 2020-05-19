@@ -9,3 +9,32 @@ const pool = new Pool({
 });
 
 module.exports = pool;
+
+// db/index.js
+function constructInjectDatabaseMiddleware(user, password) {
+  let instance;
+
+  try {
+    return function(req, res, next) {
+      if (!instance) {
+        instance = new Pool({
+          user: user,
+          host: "localhost",
+          database: "lifelinetest",
+          password: password,
+          post: 5432
+        });
+      }
+
+      req.db = instance;
+      next();
+    };
+  } catch (e) {
+    next(e);
+  }
+}
+
+module.exports = {
+  pool,
+  constructInjectDatabaseMiddleware
+};

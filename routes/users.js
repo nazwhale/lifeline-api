@@ -3,7 +3,7 @@ var router = express.Router();
 var verify = require("../auth");
 var pool = require("../db");
 var getISOTimestamp = require("../utils/helpers");
-var readUserByEmail = require("../dao/users");
+var readUserByEmail = require("../models/users");
 
 /*
   Users Table
