@@ -1,5 +1,6 @@
 const { Pool } = require("pg");
 
+// To be deleted once everything is MVC'd
 const pool = new Pool({
   user: "naz",
   host: "localhost",

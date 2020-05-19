@@ -21,14 +21,43 @@ class Experience {
 
   /* Validation */
 
-  async validate() {
-    await mustNotClash();
+  async validate(db) {
+    try {
+      await this.mustNotClash(db);
+    } catch (e) {
+      throw e;
+    }
   }
 
-  async mustNotClash() {
-    if (await makeAsync(pool.query("...."))) {
-      throw new Error("Clashes! Oops!");
-    }
+  async mustNotClash(db) {
+    return new Promise((resolve, reject) => {
+      const data = [this.start_date, this.end_date, this.user_id];
+
+      db.query(
+        `SELECT * FROM experiences
+              WHERE user_id=$3
+              AND
+              (
+                (start_date <= $1 AND end_date > $1)
+                OR
+                (start_date < $2 AND end_date >= $2)
+              )
+          `,
+        data,
+        (q_err, q_res) => {
+          if (q_err) return reject(q_err);
+
+          if (q_res.rows.length > 0) {
+            return reject("Experience overlaps another");
+          }
+
+          resolve(q_res.rows);
+        }
+      );
+    }).catch(err => {
+      // TODO: investigate UnhandledPromiseRejectionWarning in console
+      throw err;
+    });
   }
 
   /* Actions */
@@ -50,7 +79,7 @@ class Experience {
         );
       });
     } catch (e) {
-      next(e);
+      next(e); // Surely we want to abstract next away from here?
     }
   }
 
@@ -69,58 +98,29 @@ class Experience {
       );
     });
   }
-}
-/* end of class */
 
-function readExperienceByUserId(req, res, next) {
-  const { user_id } = req.query;
+  static async findByUserId(db, id) {
+    return new Promise((resolve, reject) => {
+      db.query(
+        `SELECT * FROM experiences
+                  WHERE user_id=$1
+                  ORDER BY start_date`,
+        [id],
+        (q_err, q_res) => {
+          if (q_err) return reject(q_err);
 
-  pool.query(
-    `SELECT * FROM experiences
-              WHERE user_id=$1
-              ORDER BY start_date`,
-    [user_id],
-    (q_err, q_res) => {
-      req.db_data = { experiences: q_res.rows };
-      next();
-    }
-  );
-}
+          // marshal rows to Experiences
+          let experiences = [];
+          q_res.rows.forEach(row => {
+            const e = new Experience(row);
+            experiences.push(e);
+          });
 
-// TODO: make sure this totally works
-function checkExperienceDateClash(req, res, next) {
-  const { title, start_date, end_date, user_id } = req.body;
-  const clashQueryData = [start_date, end_date, user_id];
-
-  pool.query(
-    `SELECT * FROM experiences
-    WHERE user_id=$3
-    AND
-    (
-      (start_date <= $1 AND end_date > $1)
-      OR
-      (start_date < $2 AND end_date >= $2)
-    )
-    `,
-    clashQueryData,
-    (q_err, q_res) => {
-      // conflict
-      if (q_res.rows.length > 0) {
-        req.db_data = {
-          error: {
-            code: "date_clash_experience",
-            data: q_res.rows
-          }
-        };
-      }
-      next();
-    }
-  );
+          resolve(experiences);
+        }
+      );
+    });
+  }
 }
 
-module.exports = {
-  Experience,
-  readExperienceById,
-  readExperienceByUserId,
-  checkExperienceDateClash
-};
+module.exports = Experience;

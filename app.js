@@ -12,18 +12,11 @@ const experiencesRouter = require("./routes/experiences");
 const verify = require("./auth");
 
 const { constructInjectDatabaseMiddleware } = require("./db");
-const databaseMiddleware = constructInjectDatabaseMiddleware("naz", "");
-
-// (
-//   process.env.USERNAME,
-//   process.env.PASSWORD
-// );
-
-// further down in the model... req.db
+const databaseMiddleware = constructInjectDatabaseMiddleware("naz", ""); // TODO: Get from process.env
 
 const app = express();
 
-// switching on CORS handlers
+// Switching on CORS handlers
 //
 // const localCorsHandler = (req, res, next) => next()
 //
@@ -40,9 +33,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
-// TODO: verify as middleware
 app.use("/api", indexRouter);
-app.use("/api/users", usersRouter);
+app.use("/api/users", usersRouter); // TODO: db + verify middleware
 app.use("/api/experiences", databaseMiddleware, verify, experiencesRouter);
 
 app.use(function(req, res, next) {
@@ -55,15 +47,11 @@ app.use(function(err, req, res, next) {
   res.locals.message = err.message;
   res.locals.error = req.app.get("env") === "development" ? err : {};
 
-  // render the error page
   res.status(err.status || 500);
   res.json({
     message: err.message,
     error: err
   });
 });
-
-// no idea why this gets the calc favicon, but it stops the 404s
-app.get("/favicon.ico", (req, res) => res.status(204));
 
 module.exports = app;

@@ -7,50 +7,14 @@ const dao = require("../models/Experience");
 
 // const { promisify } = require("utils");
 
-// Experience.findById(1); // => new Experience()
-
 router.post("/", ExperienceController.store);
-router.get("/", ExperienceController.show);
-
-// router.post(
-//   "/hi",
-//   // dao.checkExperienceDateClash,
-//   //  dao.createExperience,
-//   (req, res, next) => {
-//     console.log("POST /experience");
-//     //const { experiences, error } = req.db_data;
-//     // if (error != null) {
-//     //   res.json(error);
-//     // } else {
-//     //   const newExperience = experiences[0];
-//     //   res.json({
-//     //     code: "create_experience",
-//     //     experience: newExperience
-//     //   });
-//     // }
-//   }
-// );
-
-router.get("/user", verify, dao.readExperienceByUserId, (req, res, next) => {
-  const { experiences } = req.db_data;
-
-  if (experiences.length === 0) {
-    console.log("about to 404...");
-    res.status(404).json({
-      code: "not_found_experiences_for_user",
-      name: `No experiences for user ID: ${req.query.user_id}`
-    });
-  } else {
-    res.json({
-      code: "read_experiences_for_user",
-      experiences: experiences
-    });
-  }
-});
+router.get("/:id", ExperienceController.show);
+router.get("/user/:id", ExperienceController.listByUserId);
+// router.delete("/:id", ExperienceController.delete);
 
 module.exports = router;
 
-// ===========================================
+// =====================Dan's example======================
 // handler
 
 // const { json } = require("micro");
