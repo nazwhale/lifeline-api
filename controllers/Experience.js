@@ -1,4 +1,5 @@
 const Experience = require("../models/Experience");
+const { promisify } = require("util");
 
 // https://laravel.com/docs/7.x/controllers#resource-controllers
 // Actions Handled By Resource Controller
@@ -6,12 +7,13 @@ const Experience = require("../models/Experience");
 class ExperienceController {
   static async show(req, res, next) {
     const { id } = req.params;
+    const findById = promisify(Experience.findById);
     let experience;
 
     try {
-      experience = await Experience.findById(req.db, id);
-    } catch (e) {
-      next(e);
+      experience = await findById(req.db, id);
+    } catch (err) {
+      next(err);
     }
 
     if (experience == null) {

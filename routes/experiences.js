@@ -5,8 +5,6 @@ const ExperienceController = require("../controllers/Experience");
 
 const dao = require("../models/Experience");
 
-// const { promisify } = require("utils");
-
 router.post("/", ExperienceController.store);
 router.get("/:id", ExperienceController.show);
 router.get("/user/:id", ExperienceController.listByUserId);

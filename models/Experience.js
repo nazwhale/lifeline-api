@@ -62,6 +62,12 @@ class Experience {
 
   /* Actions */
 
+  static myFunc(words, fn) {
+    const err = new Error("poop");
+
+    fn(err, words);
+  }
+
   async save(db) {
     try {
       return new Promise((resolve, reject) => {
@@ -83,20 +89,18 @@ class Experience {
     }
   }
 
-  static async findById(db, id) {
-    return new Promise((resolve, reject) => {
-      db.query(
-        `SELECT * FROM experiences
+  static async findById(db, id, fn) {
+    db.query(
+      `SELECT * FROM experiences
                 WHERE id=$1`,
-        [id],
-        (q_err, q_res) => {
-          if (q_err) return reject(q_err);
-          if (q_res.rows.length === 0) return resolve(null);
-          const ex = new Experience(q_res.rows[0]);
-          resolve(ex);
-        }
-      );
-    });
+      [id],
+      (q_err, q_res) => {
+        if (q_err) return fn(q_err, ex);
+        const ex = q_res.rows.length > 0 ? new Experience(q_res.rows[0]) : null;
+
+        fn(null, ex);
+      }
+    );
   }
 
   static async findByUserId(db, id) {
