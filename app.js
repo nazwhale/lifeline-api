@@ -5,14 +5,14 @@ const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 const cors = require("cors");
 
-const indexRouter = require("./routes/index");
-const usersRouter = require("./routes/users");
-const experiencesRouter = require("./routes/experiences");
+const { constructInjectDatabaseMiddleware } = require("./db");
+const databaseMiddleware = constructInjectDatabaseMiddleware("naz", ""); // TODO: Get from process.env
 
 const verify = require("./auth");
 
-const { constructInjectDatabaseMiddleware } = require("./db");
-const databaseMiddleware = constructInjectDatabaseMiddleware("naz", ""); // TODO: Get from process.env
+const indexRouter = require("./routes/index");
+const usersRouter = require("./routes/users");
+const experiencesRouter = require("./routes/experiences");
 
 const app = express();
 
@@ -34,7 +34,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/api", indexRouter);
-app.use("/api/users", usersRouter); // TODO: db + verify middleware
+app.use("/api/users", databaseMiddleware, verify, usersRouter);
 app.use("/api/experiences", databaseMiddleware, verify, experiencesRouter);
 
 app.use(function(req, res, next) {

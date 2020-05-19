@@ -4,12 +4,15 @@ var verify = require("../auth");
 var pool = require("../db");
 var getISOTimestamp = require("../utils/helpers");
 var readUserByEmail = require("../models/users");
+const UserController = require("../controllers/User");
 
 /*
   Users Table
 */
 
-router.post("/login", verify, readUserByEmail, (req, res, next) => {
+router.post("/login", UserController.login);
+
+router.post("/login2", readUserByEmail, (req, res, next) => {
   const { email } = req.body.profile;
   const { login_type, external_login_id } = req.body.login_info;
   const { users } = req.db_data;
@@ -78,7 +81,7 @@ router.post("/", (req, res, next) => {
 });
 
 // Read existing user
-router.get("/", verify, readUserByEmail, (req, res, next) => {
+router.get("/", readUserByEmail, (req, res, next) => {
   const { users } = req;
 
   if (users.length === 0) {
