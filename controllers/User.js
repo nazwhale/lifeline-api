@@ -10,22 +10,30 @@ class UserController {
     const { login_type, external_login_id } = req.body.login_info;
 
     const findByEmail = promisify(User.findByEmail);
-    const save = promisify(User.save);
 
     try {
       const user = await findByEmail(req.db, email);
 
-      // create new user
-      if (user == null) {
-        const model = new User({
-          email,
-          login_type,
-          external_login_id
-        });
-        model.save = promisify(model.save);
+      const model = new User({
+        email,
+        login_type,
+        external_login_id
+      });
 
+      if (user == null) {
+        model.save = promisify(model.save);
         try {
-          await model.save(req.db);
+          const data = await model.save(req.db);
+          model.id = data[0].id;
+          return res.json(model.toJSON());
+        } catch (err) {
+          next(err);
+        }
+      } else {
+        model.updateLoginDetails = promisify(model.updateLoginDetails);
+        try {
+          const data = await model.updateLoginDetails(req.db);
+          model.id = data[0].id;
           return res.json(model.toJSON());
         } catch (err) {
           next(err);

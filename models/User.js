@@ -33,15 +33,32 @@ class User {
 
   /* Actions */
 
-  static async save(db, fn) {
+  async save(db, fn) {
     const data = [this.email, this.login_type, this.external_login_id];
-    console.log("saving...");
 
     db.query(
       `INSERT INTO users(email, created_at, last_login_at, login_type, external_login_id)
                 VALUES($1, timezone('utc', NOW()), timezone('utc', NOW()), $2, $3)
                 ON CONFLICT DO NOTHING
                 RETURNING id`,
+      data,
+      (q_err, q_res) => {
+        if (q_err) return fn(q_err, null);
+        fn(null, q_res.rows);
+      }
+    );
+  }
+
+  async updateLoginDetails(db, fn) {
+    const data = [this.email, this.login_type, this.external_login_id];
+
+    db.query(
+      `UPDATE users
+              SET last_login_at = timezone('utc', NOW()),
+                  login_type = $2,
+                  external_login_id = $3
+              WHERE email=$1
+              RETURNING id`,
       data,
       (q_err, q_res) => {
         if (q_err) return fn(q_err, null);
