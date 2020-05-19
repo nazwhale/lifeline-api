@@ -1,4 +1,5 @@
 const pool = require("../db");
+const { promisify } = require("util");
 
 /* models/Experience.js */
 
@@ -22,19 +23,20 @@ class Experience {
   /* Validation */
 
   async validate(db) {
+    this.mustNotClash = promisify(this.mustNotClash);
+
     try {
       await this.mustNotClash(db);
-    } catch (e) {
-      throw e;
+    } catch (err) {
+      throw err;
     }
   }
 
-  async mustNotClash(db) {
-    return new Promise((resolve, reject) => {
-      const data = [this.start_date, this.end_date, this.user_id];
+  async mustNotClash(db, fn) {
+    const data = [this.start_date, this.end_date, this.user_id];
 
-      db.query(
-        `SELECT * FROM experiences
+    db.query(
+      `SELECT * FROM experiences
               WHERE user_id=$3
               AND
               (
@@ -43,50 +45,34 @@ class Experience {
                 (start_date < $2 AND end_date >= $2)
               )
           `,
-        data,
-        (q_err, q_res) => {
-          if (q_err) return reject(q_err);
+      data,
+      (q_err, q_res) => {
+        if (q_err) return fn(q_err, null);
 
-          if (q_res.rows.length > 0) {
-            return reject("Experience overlaps another");
-          }
-
-          resolve(q_res.rows);
+        if (q_res.rows.length > 0) {
+          return fn("Experience overlaps another", null);
         }
-      );
-    }).catch(err => {
-      // TODO: investigate UnhandledPromiseRejectionWarning in console
-      throw err;
-    });
+
+        fn(null, q_res.rows);
+      }
+    );
   }
 
   /* Actions */
 
-  static myFunc(words, fn) {
-    const err = new Error("poop");
+  async save(db, fn) {
+    const data = [this.title, this.start_date, this.end_date, this.user_id];
 
-    fn(err, words);
-  }
-
-  async save(db) {
-    try {
-      return new Promise((resolve, reject) => {
-        const data = [this.title, this.start_date, this.end_date, this.user_id];
-
-        db.query(
-          `INSERT INTO experiences(title, start_date, end_date, user_id, created_at)
+    db.query(
+      `INSERT INTO experiences(title, start_date, end_date, user_id, created_at)
                 VALUES($1, $2, $3, $4, timezone('utc', NOW()))
                 RETURNING *`,
-          data,
-          (q_err, q_res) => {
-            if (q_err) return reject(q_err);
-            resolve(q_res.rows);
-          }
-        );
-      });
-    } catch (e) {
-      next(e); // Surely we want to abstract next away from here?
-    }
+      data,
+      (q_err, q_res) => {
+        if (q_err) return fn(q_err, null);
+        fn(null, q_res.rows);
+      }
+    );
   }
 
   static async findById(db, id, fn) {
@@ -95,7 +81,7 @@ class Experience {
                 WHERE id=$1`,
       [id],
       (q_err, q_res) => {
-        if (q_err) return fn(q_err, ex);
+        if (q_err) return fn(q_err, null);
         const ex = q_res.rows.length > 0 ? new Experience(q_res.rows[0]) : null;
 
         fn(null, ex);
@@ -103,27 +89,25 @@ class Experience {
     );
   }
 
-  static async findByUserId(db, id) {
-    return new Promise((resolve, reject) => {
-      db.query(
-        `SELECT * FROM experiences
+  static async findByUserId(db, id, fn) {
+    db.query(
+      `SELECT * FROM experiences
                   WHERE user_id=$1
                   ORDER BY start_date`,
-        [id],
-        (q_err, q_res) => {
-          if (q_err) return reject(q_err);
+      [id],
+      (q_err, q_res) => {
+        if (q_err) return fn(q_err, null);
 
-          // marshal rows to Experiences
-          let experiences = [];
-          q_res.rows.forEach(row => {
-            const e = new Experience(row);
-            experiences.push(e);
-          });
+        // marshal rows to Experiences
+        let experiences = [];
+        q_res.rows.forEach(row => {
+          const e = new Experience(row);
+          experiences.push(e);
+        });
 
-          resolve(experiences);
-        }
-      );
-    });
+        fn(null, experiences);
+      }
+    );
   }
 }
 
