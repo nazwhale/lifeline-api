@@ -16,3 +16,13 @@ CREATE TABLE experiences (
   user_id INT REFERENCES users(id),
   created_at TIMESTAMP
 );
+
+/* Perhaps?
+CREATE TABLE experience_types (
+    id SERIAL PRIMARY KEY,
+    category VARCHAR(255),
+    title VARCHAR(255),
+    created_by_user_id INT REFERENCES users(id),
+    created_at TIMESTAMP,
+);
+*/

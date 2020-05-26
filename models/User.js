@@ -20,8 +20,8 @@ class User {
     this.external_login_id = external_login_id;
   }
 
-  toJSON() {
-    return {
+  toJSON(picture) {
+    let json = {
       id: this.id,
       email: this.email,
       created_at: this.created_at,
@@ -29,6 +29,12 @@ class User {
       login_type: this.login_type,
       external_login_id: this.external_login_id
     };
+
+    if (picture != "") {
+      json["picture"] = picture;
+    }
+
+    return json;
   }
 
   /* Actions */
