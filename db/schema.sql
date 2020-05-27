@@ -8,6 +8,16 @@ CREATE TABLE users (
   deleted_at TIMESTAMP
 );
 
+/* expires_at would be more consistent */
+CREATE TABLE sessions (
+  id SERIAL PRIMARY KEY,
+  user_id INT REFERENCES users(id),
+  access_token VARCHAR,
+  refresh_token VARCHAR,
+  expiry TIMESTAMP,
+  created_at TIMESTAMP
+);
+
 CREATE TABLE experiences (
   id SERIAL PRIMARY KEY,
   title VARCHAR(255),

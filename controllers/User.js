@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const { promisify } = require("util");
+const SessionController = require("../controllers/Session");
 
 const {
   getAuthDetailsFromCode,
@@ -43,12 +44,20 @@ class UserController {
         external_login_id: id
       });
 
+      // TODO: find a better place for this
+      // return next() in all of these and pop it on the router?
+      res.cookie("loggedIn", req.auth_details, {
+        maxAge: 900000,
+        httpOnly: true
+      });
+
+      let userId;
       if (user == null) {
         model.save = promisify(model.save);
         try {
           const data = await model.save(req.db);
           model.id = data[0].id;
-          return res.json(model.toJSON(picture));
+          userId = model.id;
         } catch (err) {
           next(err);
         }
@@ -57,14 +66,18 @@ class UserController {
         try {
           const data = await model.updateLoginDetails(req.db);
           model.id = data[0].id;
-          return res.json(model.toJSON(picture));
+          userId = model.id;
         } catch (err) {
           next(err);
         }
       }
 
+      req.user_id = userId;
+      await SessionController.store(req, res, next);
+
       return res.json(user.toJSON(picture));
     } catch (err) {
+      console.log("👋 err in user controller");
       next(err);
     }
   }
